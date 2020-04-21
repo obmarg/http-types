@@ -10,6 +10,7 @@ use crate::headers::{
     self, HeaderName, HeaderValue, Headers, Names, ToHeaderValues, Values, CONTENT_TYPE,
 };
 use crate::mime::Mime;
+use crate::serde::DeserializeOwned;
 use crate::trailers::{Trailers, TrailersSender};
 use crate::{Body, Cookie, StatusCode, TypeMap, Version};
 
@@ -243,15 +244,44 @@ impl Response {
     /// use http_types::{Body, Url, Method, Response, StatusCode};    
     /// use async_std::io::Cursor;
     ///
-    /// let mut resp = Response::new(StatusCode::Ok);    
+    /// let mut res = Response::new(StatusCode::Ok);    
     /// let cursor = Cursor::new("Hello Nori");
     /// let body = Body::from_reader(cursor, None);
-    /// resp.set_body(body);
-    /// assert_eq!(&resp.body_string().await.unwrap(), "Hello Nori");
+    /// res.set_body(body);
+    /// assert_eq!(&res.body_string().await.unwrap(), "Hello Nori");
     /// # Ok(()) }) }
     /// ```
     pub async fn body_string(self) -> io::Result<String> {
         self.body.into_string().await
+    }
+
+    /// Read the body as JSON.
+    ///
+    /// This consumes the response. If you want to read the body without
+    /// consuming the request, consider using the `take_body` method and
+    /// then calling `Body::into_json` or using the Response's AsyncRead
+    /// implementation to read the body.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # fn main() -> Result<(), http_types::Error> { async_std::task::block_on(async {
+    /// use http_types::{Body, Url, Method, Response, StatusCode};    
+    /// use http_types::serde::{Serialize, Deserialize};
+    ///
+    /// #[derive(Debug, Serialize, Deserialize)]
+    /// struct Cat { name: String }
+    ///
+    /// let cat = Cat { name: String::from("chashu") };
+    /// let mut res = Response::new(StatusCode::Ok);    
+    /// res.set_body(Body::from_json(cat)?);
+    ///
+    /// let cat: Cat = res.body_json().await?;
+    /// assert_eq!(&cat.name, "chashu");
+    /// # Ok(()) }) }
+    /// ```
+    pub async fn body_json<T: DeserializeOwned>(self) -> crate::Result<T> {
+        self.body.into_json().await
     }
 
     /// Set the response MIME.

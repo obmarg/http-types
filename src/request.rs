@@ -10,6 +10,7 @@ use crate::headers::{
     self, HeaderName, HeaderValue, Headers, Names, ToHeaderValues, Values, CONTENT_TYPE,
 };
 use crate::mime::Mime;
+use crate::serde::DeserializeOwned;
 use crate::trailers::{Trailers, TrailersSender};
 use crate::Cookie;
 use crate::{Body, Method, TypeMap, Url, Version};
@@ -224,6 +225,35 @@ impl Request {
     /// ```
     pub async fn body_string(self) -> io::Result<String> {
         self.body.into_string().await
+    }
+
+    /// Read the body as JSON.
+    ///
+    /// This consumes the request. If you want to read the body without
+    /// consuming the request, consider using the `take_body` method and
+    /// then calling `Body::into_json` or using the Request's AsyncRead
+    /// implementation to read the body.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # fn main() -> Result<(), http_types::Error> { async_std::task::block_on(async {
+    /// use http_types::{Body, Url, Method, Request};
+    /// use http_types::serde::{Serialize, Deserialize};
+    ///
+    /// #[derive(Debug, Serialize, Deserialize)]
+    /// struct Cat { name: String }
+    ///
+    /// let cat = Cat { name: String::from("chashu") };
+    /// let mut req = Request::new(Method::Get, Url::parse("https://example.com").unwrap());
+    /// req.set_body(Body::from_json(cat)?);
+    ///
+    /// let cat: Cat = req.body_json().await?;
+    /// assert_eq!(&cat.name, "chashu");
+    /// # Ok(()) }) }
+    /// ```
+    pub async fn body_json<T: DeserializeOwned>(self) -> crate::Result<T> {
+        self.body.into_json().await
     }
 
     /// Get an HTTP header.
