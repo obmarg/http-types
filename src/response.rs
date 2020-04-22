@@ -521,32 +521,14 @@ impl AsMut<Headers> for Response {
     }
 }
 
-impl From<Response> for Body {
-    fn from(res: Response) -> Body {
-        res.body
-    }
-}
-
-impl From<String> for Response {
-    fn from(s: String) -> Self {
+impl<T> From<T> for Response
+where
+    T: Into<Body>,
+{
+    fn from(value: T) -> Self {
+        let body: Body = value.into();
         let mut res = Response::new(StatusCode::Ok);
-        res.set_body(s);
-        res
-    }
-}
-
-impl<'a> From<&'a str> for Response {
-    fn from(s: &'a str) -> Self {
-        let mut res = Response::new(StatusCode::Ok);
-        res.set_body(s);
-        res
-    }
-}
-
-impl From<Vec<u8>> for Response {
-    fn from(b: Vec<u8>) -> Self {
-        let mut res = Response::new(StatusCode::Ok);
-        res.set_body(b);
+        res.set_body(body);
         res
     }
 }
