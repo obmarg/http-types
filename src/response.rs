@@ -521,18 +521,6 @@ impl AsMut<Headers> for Response {
     }
 }
 
-impl<T> From<T> for Response
-where
-    T: Into<Body>,
-{
-    fn from(value: T) -> Self {
-        let body: Body = value.into();
-        let mut res = Response::new(StatusCode::Ok);
-        res.set_body(body);
-        res
-    }
-}
-
 impl IntoIterator for Response {
     type Item = (HeaderName, Vec<HeaderValue>);
     type IntoIter = headers::IntoIter;
