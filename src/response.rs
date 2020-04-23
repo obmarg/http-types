@@ -3,6 +3,7 @@ use async_std::sync;
 
 use std::convert::TryInto;
 use std::mem;
+use std::ops::Index;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
@@ -504,6 +505,34 @@ impl AsRef<Headers> for Response {
 impl AsMut<Headers> for Response {
     fn as_mut(&mut self) -> &mut Headers {
         &mut self.headers
+    }
+}
+
+impl Index<&HeaderName> for Response {
+    type Output = HeaderValues;
+
+    /// Returns a reference to the value corresponding to the supplied name.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the name is not present in `Response`.
+    #[inline]
+    fn index(&self, name: &HeaderName) -> &HeaderValues {
+        self.headers.index(name)
+    }
+}
+
+impl Index<&str> for Response {
+    type Output = HeaderValues;
+
+    /// Returns a reference to the value corresponding to the supplied name.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the name is not present in `Response`.
+    #[inline]
+    fn index(&self, name: &str) -> &HeaderValues {
+        self.headers.index(name)
     }
 }
 

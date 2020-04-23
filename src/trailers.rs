@@ -52,7 +52,7 @@ use crate::headers::{
 use async_std::sync::Sender;
 
 use std::convert::TryInto;
-use std::ops::{Deref, DerefMut};
+use std::ops::{Deref, DerefMut, Index};
 
 /// A collection of trailing HTTP headers.
 #[derive(Debug)]
@@ -173,6 +173,34 @@ impl Deref for Trailers {
 impl DerefMut for Trailers {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.headers
+    }
+}
+
+impl Index<&HeaderName> for Trailers {
+    type Output = HeaderValues;
+
+    /// Returns a reference to the value corresponding to the supplied name.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the name is not present in `Trailers`.
+    #[inline]
+    fn index(&self, name: &HeaderName) -> &HeaderValues {
+        self.headers.index(name)
+    }
+}
+
+impl Index<&str> for Trailers {
+    type Output = HeaderValues;
+
+    /// Returns a reference to the value corresponding to the supplied name.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the name is not present in `Trailers`.
+    #[inline]
+    fn index(&self, name: &str) -> &HeaderValues {
+        self.headers.index(name)
     }
 }
 
